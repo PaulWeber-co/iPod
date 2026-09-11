@@ -1,4 +1,8 @@
-customtkinter
-mutagen
-Pillow
-pywin32
+# Direkter Gerätezugriff (usbmux / lockdown / AFC) - reines Python, kein iTunes
+pymobiledevice3>=4.14
+# Tag-Lesen und -Schreiben (MP3/M4A/FLAC/OGG/...)
+mutagen>=1.47
+# Lokaler Web-UI-Server
+Flask>=3.0
+# Cover-Normalisierung
+Pillow>=10.0
