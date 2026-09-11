@@ -1,0 +1,261 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>iPodFS</title>
+<link rel="stylesheet" href="/static/style.css">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect x='8' y='2' width='16' height='28' rx='3' fill='%23e9edf5'/><rect x='10' y='4' width='12' height='18' rx='1.5' fill='%2310131b'/><circle cx='16' cy='26' r='3' fill='%2310131b'/></svg>">
+</head>
+<body>
+
+<header>
+  <div class="brand">
+    <div class="logo"></div>
+    <div>iPodFS<small>Direkter USB-Zugriff, kein iTunes</small></div>
+  </div>
+  <div id="device-chip" title="Verbinden / Geräteinfo">
+    <span class="dot"></span>
+    <div><b id="dev-name">Nicht verbunden</b> <span id="dev-sub">klicken zum Verbinden</span></div>
+  </div>
+</header>
+
+<nav>
+  <button data-tab="files" class="active">Dateien</button>
+  <button data-tab="music">Musik aufräumen <span class="badge" id="badge-issues" hidden>0</span></button>
+  <button data-tab="sync">Synchronisieren</button>
+  <button data-tab="diag">Diagnose</button>
+</nav>
+
+<main>
+
+<!-- ══════════════════════════════════════════════════ Dateien ══ -->
+<section id="tab-files">
+  <div class="card">
+    <h2>Dateisystem des iPods</h2>
+    <p>Direkt über USB — kein iTunes, kein CopyTrans. Dateien aus dem Explorer/Finder
+       einfach in die Liste ziehen.</p>
+
+    <div class="row" style="margin-bottom:12px">
+      <select id="fs-root" style="min-width:260px"></select>
+      <button class="btn small" id="fs-up">↑ Eine Ebene</button>
+      <button class="btn small" id="fs-reload">Aktualisieren</button>
+      <div class="spacer"></div>
+      <button class="btn small" id="fs-mkdir">Neuer Ordner</button>
+      <button class="btn small" id="fs-pick">Dateien wählen…</button>
+      <button class="btn small danger" id="fs-del" disabled>Löschen</button>
+    </div>
+
+    <div class="crumbs" id="fs-crumbs" style="margin-bottom:10px"></div>
+
+    <div class="files" id="fs-box">
+      <div class="dropzone">Loslassen zum Hochladen in diesen Ordner</div>
+      <table>
+        <thead><tr>
+          <th style="width:26px"><input type="checkbox" id="fs-all"></th>
+          <th>Name</th><th style="width:110px" class="num">Größe</th>
+          <th style="width:150px" class="num">Geändert</th><th style="width:110px"></th>
+        </tr></thead>
+        <tbody id="fs-rows"></tbody>
+      </table>
+      <div class="empty" id="fs-empty">Noch nicht verbunden.</div>
+    </div>
+    <input type="file" id="fs-files" multiple hidden>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════════════ Musik ══ -->
+<section id="tab-music" hidden>
+  <div class="card">
+    <h2>Sammlung einlesen</h2>
+    <p>iPodFS liest die Tags deiner MP3s und findet Alben, die auf dem iPod in
+       mehrere Cover-Flow-Kacheln zerfallen würden.</p>
+    <div class="row">
+      <input type="text" id="lib-path" class="grow" placeholder="Pfad zum Musikordner, z. B. D:\Musik">
+      <button class="btn" id="lib-browse">Durchsuchen…</button>
+      <button class="btn primary" id="lib-scan">Einlesen</button>
+    </div>
+    <div id="lib-roots" class="hint" style="margin-top:8px"></div>
+  </div>
+
+  <div class="card" id="lib-stats-card" hidden>
+    <h2>Was der iPod daraus machen würde</h2>
+    <p>Eine Kachel pro Kombination aus Album-Interpret und Album — genau hier entstehen die Dubletten.</p>
+    <div class="stats" id="lib-stats"></div>
+    <div class="row" style="margin-top:16px">
+      <button class="btn primary" id="lib-fixall">Alle Probleme beheben</button>
+      <button class="btn" id="lib-opts-toggle">Einstellungen</button>
+      <div class="spacer"></div>
+      <label class="check"><input type="checkbox" id="lib-only-issues" checked> nur Problemalben</label>
+      <input type="text" id="lib-search" placeholder="Suchen…" style="width:180px">
+    </div>
+    <div id="lib-opts" hidden style="margin-top:14px;padding-top:14px;border-top:1px solid var(--line)">
+      <div class="stats" style="grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:8px">
+        <label class="check"><input type="checkbox" data-opt="set_album_artist"> Album-Interpret (TPE2) vereinheitlichen</label>
+        <label class="check"><input type="checkbox" data-opt="unify_album_names"> „(Deluxe Edition)“ &amp; Co. zusammenführen</label>
+        <label class="check"><input type="checkbox" data-opt="clean_invisible"> Unsichtbare Zeichen bereinigen</label>
+        <label class="check"><input type="checkbox" data-opt="unify_artwork"> Genau ein Cover pro Album</label>
+        <label class="check"><input type="checkbox" data-opt="fix_compilation_flag"> Kompilations-Flag korrigieren</label>
+        <label class="check"><input type="checkbox" data-opt="write_sort_tags"> Sortier-Tags schreiben</label>
+        <label class="check"><input type="checkbox" data-opt="fill_disc_numbers"> Disc-Nummern aus Albumnamen ziehen</label>
+        <label class="check"><input type="checkbox" data-opt="move_feat_to_title"> „feat. X“ vom Interpret in den Titel</label>
+      </div>
+    </div>
+  </div>
+
+  <div class="card" id="lib-albums-card" hidden>
+    <h2>Alben <span class="hint" id="lib-count"></span></h2>
+    <div class="albums" id="lib-albums"></div>
+  </div>
+
+  <div class="card" id="lib-backups-card" hidden>
+    <h2>Rückgängig machen</h2>
+    <p>Vor jeder Reparatur werden die alten Tags samt Cover gesichert.</p>
+    <div id="lib-backups"></div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════════════ Sync ══ -->
+<section id="tab-sync" hidden>
+  <div class="card">
+    <h2>Ziel auf dem iPod</h2>
+    <p>Die Ordnerstruktur entsteht aus dem <b>Album-Interpret</b> — deshalb landen
+       „Katy Perry“ und „Katy Perry feat. Snoop Dogg“ garantiert im selben Album.</p>
+    <div class="row">
+      <select id="sync-root" style="min-width:260px"></select>
+      <input type="text" id="sync-base" class="grow" value="/iPodFS" placeholder="/iPodFS">
+      <select id="sync-layout"></select>
+    </div>
+    <div class="row" style="margin-top:12px">
+      <label class="check"><input type="checkbox" id="sync-delete">
+        Nicht mehr vorhandene Songs auf dem iPod löschen</label>
+      <div class="spacer"></div>
+      <button class="btn" id="sync-preview">Vorschau</button>
+      <button class="btn primary" id="sync-run" disabled>Übertragen</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Noch kein Player auf dem iPod?</h2>
+    <p>Die iOS-Musik-App lässt sich von außen nicht befüllen (siehe Diagnose).
+       Ein Player mit Dateifreigabe — VLC etwa — nimmt die Musik dagegen direkt entgegen
+       und gruppiert sie nach Album-Interpret, also genau richtig.</p>
+    <div class="note">
+      <h3>Zwei Wege</h3>
+      <ul>
+        <li><b>App Store auf dem iPod:</b> VLC suchen, laden — bei alten Geräten bietet
+            der Store „letzte kompatible Version“ an, sofern die App schon einmal mit
+            derselben Apple-ID geladen wurde.</li>
+        <li><b>Per Kabel:</b> eine vorhandene <span class="mono">.ipa</span> hier hochladen.
+            Sie muss gültig signiert sein (App-Store-Kauf oder eigenes Zertifikat);
+            mit Jailbreak + AppSync läuft jede.</li>
+      </ul>
+    </div>
+    <div class="row">
+      <button class="btn" id="ipa-pick">.ipa auswählen und installieren…</button>
+      <span class="hint" id="ipa-name"></span>
+    </div>
+    <input type="file" id="ipa-file" accept=".ipa" hidden>
+  </div>
+
+  <div class="card" id="sync-result-card" hidden>
+    <h2>Vorschau</h2>
+    <div class="stats" id="sync-stats"></div>
+    <div id="sync-warn"></div>
+    <div class="files" style="margin-top:14px;min-height:0">
+      <table><thead><tr><th style="width:90px">Aktion</th><th>Ziel auf dem iPod</th>
+        <th style="width:100px" class="num">Größe</th></tr></thead>
+        <tbody id="sync-rows"></tbody></table>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════════════ Diagnose ══ -->
+<section id="tab-diag" hidden>
+  <div class="card">
+    <h2>Verbindungsdiagnose</h2>
+    <p>Die Kette lautet: Python → pymobiledevice3 → usbmux → lockdownd → AFC.</p>
+    <div class="row" style="margin-bottom:12px">
+      <button class="btn" id="diag-run">Erneut prüfen</button>
+      <span class="hint" id="diag-platform"></span>
+    </div>
+    <div id="diag-list"></div>
+  </div>
+
+  <div class="card">
+    <h2>Was geht — und was nicht</h2>
+    <div class="note">
+      <h3>Funktioniert ohne jedes Apple-Programm</h3>
+      <ul>
+        <li>Voller Lese- und Schreibzugriff auf die Medien-Partition
+            <span class="mono">/var/mobile/Media</span> (Fotos, Videos, Aufnahmen, eigene Ordner)</li>
+        <li>Zugriff auf die Sandbox jeder App mit Dateifreigabe — dort landet die Musik</li>
+        <li>Mit Jailbreak zusätzlich das komplette Wurzel-Dateisystem über <span class="mono">afc2</span></li>
+      </ul>
+    </div>
+    <div class="note warn">
+      <h3>Die iOS-eigene Musik-App lässt sich nicht von außen befüllen</h3>
+      <p>Ab iOS 5 liegt die Musikdatenbank in
+         <span class="mono">iTunes_Control/iTunes/MediaLibrary.sqlitedb</span> und ist mit einer
+         gerätespezifischen Prüfsumme („hashAB“) signiert. Die ist bis heute nicht
+         entschlüsselt — auch libgpod/gtkpod scheitern daran. Eine selbst geschriebene
+         Datenbank würde die Musik-App schlicht ignorieren.</p>
+      <p><b>Der Weg, der funktioniert:</b> ein Player mit Dateifreigabe (z. B. VLC) —
+         iPodFS schiebt die Musik direkt in dessen Ordner. Der Player liest die Tags selbst,
+         und weil iPodFS sie vorher sauber gemacht hat, stimmt die Albumansicht dort auch.</p>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<div id="jobbar" hidden>
+  <div class="line">
+    <span class="t" id="job-title"></span>
+    <span class="m" id="job-msg"></span>
+    <span class="hint" id="job-pct"></span>
+    <button class="btn small danger" id="job-cancel">Abbrechen</button>
+  </div>
+  <div class="bar"><i id="job-bar" style="width:0"></i></div>
+</div>
+
+<div id="toasts"></div>
+
+<dialog id="dlg-track">
+  <h3>Song bearbeiten</h3>
+  <div class="grid">
+    <label>Titel</label><input type="text" id="t-title">
+    <label>Interpret</label><input type="text" id="t-artist">
+    <label>Album-Interpret</label><input type="text" id="t-albumartist">
+    <label>Album</label><input type="text" id="t-album">
+    <label>Track / von</label>
+    <div class="row tight"><input type="number" id="t-track" style="width:75px">
+      <input type="number" id="t-track-total" style="width:75px"></div>
+    <label>CD / von</label>
+    <div class="row tight"><input type="number" id="t-disc" style="width:75px">
+      <input type="number" id="t-disc-total" style="width:75px"></div>
+    <label>Genre</label><input type="text" id="t-genre">
+    <label>Jahr</label><input type="text" id="t-year">
+  </div>
+  <div class="row" style="margin-top:16px">
+    <div class="spacer"></div>
+    <button class="btn" id="t-cancel">Abbrechen</button>
+    <button class="btn primary" id="t-save">Speichern</button>
+  </div>
+</dialog>
+
+<dialog id="dlg-device">
+  <h3>iPod verbinden</h3>
+  <div id="dev-list"></div>
+  <div class="row" style="margin-top:16px">
+    <button class="btn danger" id="dev-disconnect">Trennen</button>
+    <div class="spacer"></div>
+    <button class="btn" id="dev-close">Schließen</button>
+    <button class="btn primary" id="dev-refresh">Suchen</button>
+  </div>
+</dialog>
+
+<script>window.IPODFS_TOKEN = "{{TOKEN}}";</script>
+<script src="/static/app.js"></script>
+</body>
+</html>
