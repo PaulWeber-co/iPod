@@ -3,8 +3,7 @@
 Direkter USB-Zugriff auf einen iPod touch (oder ein iPhone) vom PC oder Mac —
 **ohne iTunes, ohne CopyTrans, ohne Cloud**. Mit einer Musikverwaltung, die das
 Problem löst, an dem Cover Flow auf alten Geräten reihenweise scheitert:
-Alben, die in mehrere Kacheln zerfallen, weil bei einem Song
-*„Katy Perry“* und beim nächsten *„Katy Perry feat. Snoop Dogg“* steht.
+Alben, die in mehrere Kacheln zerfallen,.
 
 ```
 ┌──────────┐   USB    ┌─────────┐   TCP    ┌────────────┐   AFC   ┌───────────┐
@@ -23,33 +22,18 @@ und wenn das leer ist, nimmt iOS ersatzweise den normalen Interpreten `TPE1`.
 
 Genau da bricht es:
 
-| Song | Interpret (TPE1) | Album-Interpret (TPE2) | Kachel |
-|------|------------------|------------------------|--------|
-| Teenage Dream | Katy Perry | *leer* | „Katy Perry – Teenage Dream“ |
-| California Gurls | Katy Perry feat. Snoop Dogg | *leer* | „Katy Perry feat. Snoop Dogg – Teenage Dream“ |
-| E.T. | Katy Perry (feat. Kanye West) | *leer* | „Katy Perry (feat. Kanye West) – Teenage Dream“ |
 
-Ein Album, drei Kacheln, dreimal dasselbe Cover.
 
-iPodFS setzt `TPE2` bei allen drei Songs auf `Katy Perry` — der Interpret bleibt
-unangetastet, die Gastauftritte gehen also nicht verloren. Aus drei Kacheln
-wird eine.
+
+
+
 
 ### Und die anderen Ursachen, die keiner sieht
 
 Dasselbe passiert bei einem halben Dutzend weiterer Kleinigkeiten. iPodFS
 erkennt und behebt sie alle:
 
-| Ursache | Beispiel |
-|---------|----------|
-| feat. / ft. / featuring im Interpret | `Katy Perry feat. Snoop Dogg` |
-| Gäste ohne feat.-Marker | `Eminem & Rihanna`, `Eminem, Lil Wayne` |
-| Album-Interpret uneinheitlich gesetzt | mal `Eminem`, mal `Eminem & Rihanna` |
-| Zusätze im Albumnamen | `Recovery` vs. `Recovery (Deluxe Edition)` |
-| Disc-Nummer im Albumnamen | `The Wall (Disc 1)` / `(Disc 2)` |
-| **Unsichtbare Zeichen** | `Teenage Dream` vs. `Teenage Dream␠`, geschütztes Leerzeichen, typografischer Apostroph |
-| Uneinheitliche oder mehrfache Cover | drei Songs mit Cover A, einer mit Cover B |
-| Kompilations-Flag (TCMP) uneinheitlich | ein Song landet unter „Compilations“ |
+
 
 Bänder wie *Simon & Garfunkel* oder *Earth, Wind & Fire* bleiben dabei heil —
 ein `&` allein trennt nichts, nur ein erkennbarer Hauptinterpret tut das.
